@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdn.bootcss.com/underscore.js/1.9.1/underscore.js"></script>
+<script type="text/javascript" src="http://t.datastory.com.cn/resources/js/lib/d3.v3.min.js?version=0.2.22"></script>
+<script type="text/javascript" src="http://t.datastory.com.cn/resources/js/lib/d3.layout.cloud.js?version=0.2.22"></script>
+</head>
+<body>
+<div id="keywordDist" style="width:800px;height:800px;"></div>
+</body>
+</html>
+<script>
+//关键词分布
+frepkeywordstat();
+
+function frepkeywordstat(){
+    // if (!$.support.leadingWhitespace) {
+    //     $("#keywordDist").html("请使用Chrome浏览器以获得最佳浏览体验");
+    //     return;
+    // }
+    var lvalues = [];
+    var keyword = "泽泽$1|文晖$2";
+    debugger
+    if(keyword && keyword.length){
+        var ls = keyword.split("|");
+        if(ls==null||ls.length<=0){
+             $("#keywordDist").html('<div style="margin-top: 140px;margin-left: 180px;">暂无数据...</div>');
+            return;
+        }
+        $.each(ls, function(key, value){
+            var items = value.split("$");
+            
+            if(items==null||items.length<2){
+                return true;
+            }
+            var p = {};
+            if(items.length == 2){
+                p.text = items[0];
+                p.size = items[1];
+                lvalues.push(p);
+            }else if(items.length == 3){
+                p.text = items[0];
+                p.size = items[2];
+                lvalues.push(p);
+            }
+            if(lvalues.length >= 25){
+                return false;
+            }
+        });
+        
+        if(!lvalues.length){        
+            $("#keywordDist").html('<div style="margin-top: 140px;margin-left: 180px;">暂无数据...</div>');
+            return;
+        }
+    }else{
+        $("#keywordDist").html('<div style="margin-top: 140px;margin-left: 180px;">暂无数据...</div>');
+        return;
+    }
+    lvalues = _.sortBy(lvalues, function(o1){return parseInt(o1.size)});
+    var scale = d3.scale.linear()
+        .domain([parseInt(lvalues[0].size), parseInt(lvalues[lvalues.length-1].size)])
+        .range([20,45]);
+    $("#keywordDist").html("");
+    d3.layout.cloud().size([800, 800])
+        .words(lvalues)
+        .rotate(function() { return Math.ceil(Math.random()*40)-20; })
+        .font("Impact")
+        .fontSize(function(d) { return scale(parseInt(d.size))})
+        .on("end", draw)
+        .start();
+}
+
+function draw(words) {
+    var fill = d3.scale.category20();
+    d3.select("#keywordDist").append("svg")
+        .attr("width", 800)
+        .attr("height", 800)
+        .append("g")
+        .attr("transform", "translate(200, 160)")
+        .selectAll("text")
+        .data(words)
+        .enter().append("text")
+        .style("font-size", function(d) { return d.size + "px"; })
+        .style("font-family", "Impact")
+        .style("fill", function(d, i) { return fill(i); })
+        .attr("text-anchor", "middle")
+        .attr("transform", function(d) {
+            return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+        })
+        .text(function(d) { return d.text; })
+        .style("opacity", 1e-6)
+        .transition()
+        .duration(1000)
+        .style("opacity", 1);
+}
+</script>
+
+
+
+  
